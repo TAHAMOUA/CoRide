@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTrajetRequest;
 use App\Http\Requests\UpdateTrajetRequest;
-use App\Models\Trajet;
 use App\Models\Employe;
+use App\Models\Trajet;
 
 class TrajetController extends Controller
 {
@@ -16,7 +16,7 @@ class TrajetController extends Controller
     {
         $trajets = Trajet::with('employe')->get();
 
-        return response()->json($trajets);
+        return view('trajets.index', compact('trajets'));
     }
 
     /**
@@ -24,7 +24,9 @@ class TrajetController extends Controller
      */
     public function create()
     {
-        //
+        $employes = Employe::all();
+
+        return view('trajets.create', compact('employes'));
     }
 
     /**
@@ -32,12 +34,11 @@ class TrajetController extends Controller
      */
     public function store(StoreTrajetRequest $request)
     {
-        $trajet = Trajet::create($request->validated());
+        Trajet::create($request->validated());
 
-        return response()->json([
-            'message' => 'Trajet créé avec succès.',
-            'data' => $trajet
-        ], 201);
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet créé avec succès.');
     }
 
     /**
@@ -45,7 +46,7 @@ class TrajetController extends Controller
      */
     public function show(Trajet $trajet)
     {
-        return response()->json($trajet->load('employe'));
+        return view('trajets.show', compact('trajet'));
     }
 
     /**
@@ -53,7 +54,9 @@ class TrajetController extends Controller
      */
     public function edit(Trajet $trajet)
     {
-        //
+        $employes = Employe::all();
+
+        return view('trajets.edit', compact('trajet', 'employes'));
     }
 
     /**
@@ -63,10 +66,9 @@ class TrajetController extends Controller
     {
         $trajet->update($request->validated());
 
-        return response()->json([
-            'message' => 'Trajet modifié avec succès.',
-            'data' => $trajet
-        ]);
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet modifié avec succès.');
     }
 
     /**
@@ -76,8 +78,8 @@ class TrajetController extends Controller
     {
         $trajet->delete();
 
-        return response()->json([
-            'message' => 'Trajet supprimé avec succès.'
-        ]);
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet supprimé avec succès.');
     }
 }
