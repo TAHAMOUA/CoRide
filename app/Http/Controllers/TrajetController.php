@@ -2,20 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreTrajetRequest;
+use App\Http\Requests\UpdateTrajetRequest;
+use App\Models\Trajet;
+use App\Models\Employe;
 
 class TrajetController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Afficher la liste des trajets.
      */
     public function index()
     {
-        //
+        $trajets = Trajet::with('employe')->get();
+
+        return response()->json($trajets);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Afficher le formulaire de création.
      */
     public function create()
     {
@@ -23,42 +28,56 @@ class TrajetController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Enregistrer un nouveau trajet.
      */
-    public function store(Request $request)
+    public function store(StoreTrajetRequest $request)
+    {
+        $trajet = Trajet::create($request->validated());
+
+        return response()->json([
+            'message' => 'Trajet créé avec succès.',
+            'data' => $trajet
+        ], 201);
+    }
+
+    /**
+     * Afficher un trajet.
+     */
+    public function show(Trajet $trajet)
+    {
+        return response()->json($trajet->load('employe'));
+    }
+
+    /**
+     * Afficher le formulaire de modification.
+     */
+    public function edit(Trajet $trajet)
     {
         //
     }
 
     /**
-     * Display the specified resource.
+     * Modifier un trajet.
      */
-    public function show(string $id)
+    public function update(UpdateTrajetRequest $request, Trajet $trajet)
     {
-        //
+        $trajet->update($request->validated());
+
+        return response()->json([
+            'message' => 'Trajet modifié avec succès.',
+            'data' => $trajet
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Supprimer un trajet.
      */
-    public function edit(string $id)
+    public function destroy(Trajet $trajet)
     {
-        //
-    }
+        $trajet->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'message' => 'Trajet supprimé avec succès.'
+        ]);
     }
 }
