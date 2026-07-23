@@ -25,7 +25,7 @@ class StoreReservationRequest extends FormRequest
         return [
             'id_trajet' => 'required|exists:trajets,id_trajet',
             'id_employe' => 'required|exists:employes,id_employe',
-            'statut' => 'required|in:en_attente,confirmee,refusee,annulee',
+            'statut' => 'nullable',
             'date_reservation' => 'required|date',
         ];
     }

@@ -59,7 +59,11 @@ class ReservationController extends Controller
     }
 
     
-    Reservation::create($request->validated());
+    $data = $request->validated();
+
+$data['statut'] = 'en_attente';
+
+Reservation::create($data);
 
     return redirect()
         ->route('reservations.index')
