@@ -10,26 +10,31 @@ return new class extends Migration
     {
         Schema::create('employes', function (Blueprint $table) {
 
-            $table->id('id_employe');
+    $table->id('id_employe');
 
-            $table->string('nom');
+$table->string('nom');
 
-            $table->string('email_professionnel')->unique();
+$table->string('email_professionnel')->unique();
 
-            $table->string('ville_residence');
 
-            $table->enum('role', [
-                'conducteur',
-                'passager',
-                'les_deux'
-            ]);
 
-            $table->foreignId('id_entreprise')
-                ->constrained('entreprises', 'id_entreprise')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
 
-            $table->timestamps();
+$table->string('ville_residence');
+
+$table->enum('role', [
+    'conducteur',
+    'passager',
+    'les_deux'
+]);
+
+
+
+$table->foreignId('id_entreprise')
+    ->constrained('entreprises', 'id_entreprise')
+    ->cascadeOnUpdate()
+    ->restrictOnDelete();
+
+$table->timestamps();
         });
     }
 
