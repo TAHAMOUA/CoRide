@@ -26,6 +26,7 @@ class StoreReservationRequest extends FormRequest
             'id_trajet' => 'required|exists:trajets,id_trajet',
             'id_employe' => 'required|exists:employes,id_employe',
             'statut' => 'required|in:en_attente,confirmee,refusee,annulee',
+            'date_reservation' => 'required|date',
         ];
     }
 
@@ -36,6 +37,7 @@ class StoreReservationRequest extends FormRequest
             'id_trajet.exists' => 'Le trajet est introuvable.',
             'id_employe.required' => "L'employé est obligatoire.",
             'statut.in' => 'Le statut est invalide.',
+            'date_reservation.required' => 'La date de réservation est obligatoire.',
         ];
     }
 }
