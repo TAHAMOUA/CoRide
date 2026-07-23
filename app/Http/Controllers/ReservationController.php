@@ -15,8 +15,9 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        $reservations = Reservation::with(['trajet', 'employe'])->get();
-
+Reservation::with(['trajet','employe'])
+    ->latest()
+    ->get();
         return view('reservations.index', compact('reservations'));
     }
 
@@ -38,14 +39,16 @@ class ReservationController extends Controller
 {
     $trajet = Trajet::findOrFail($request->id_trajet);
 
-    if ($trajet->places_disponibles <= 0) {
+   $reservationsConfirmees = $trajet->reservations()
+    ->where('statut', 'confirmee')
+    ->count();
 
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', 'Aucune place disponible pour ce trajet.');
-    }
-
+if ($reservationsConfirmees >= $trajet->places_disponibles) {
+    return redirect()
+        ->back()
+        ->withInput()
+        ->with('error', 'Ce trajet est complet.');
+}
     $reservationExiste = Reservation::where('id_trajet', $request->id_trajet)
         ->where('id_employe', $request->id_employe)
         ->exists();
@@ -62,7 +65,7 @@ class ReservationController extends Controller
     $data = $request->validated();
 
 $data['statut'] = 'en_attente';
-
+$data['date_reservation'] = now();
 Reservation::create($data);
 
     return redirect()
@@ -75,8 +78,9 @@ Reservation::create($data);
      */
     public function show(Reservation $reservation)
     {
-        return view('reservations.show', compact('reservation'));
-    }
+$reservation->load(['trajet', 'employe']);
+
+return view('reservations.show', compact('reservation'));    }
 
     /**
      * Afficher le formulaire de modification.
@@ -92,9 +96,7 @@ Reservation::create($data);
     /**
      * Mettre à jour une réservation.
      */
-    /**
- * Mettre à jour une réservation.
- */
+  
 public function update(UpdateReservationRequest $request, Reservation $reservation)
 {
     $ancienStatut = $reservation->statut;
@@ -107,12 +109,30 @@ public function update(UpdateReservationRequest $request, Reservation $reservati
         'annulee' => [],
     ];
 
-    if (!in_array($nouveauStatut, $transitions[$ancienStatut])) {
+    if (
+    !isset($transitions[$ancienStatut]) ||
+    !in_array($nouveauStatut, $transitions[$ancienStatut])
+) {
+    return redirect()
+        ->back()
+        ->with('error', 'Transition de statut non autorisée.');
+}
+// Vérifier les places disponibles avant la confirmation
+if ($nouveauStatut === 'confirmee') {
+
+    $trajet = $reservation->trajet;
+
+    $reservationsConfirmees = $trajet->reservations()
+        ->where('statut', 'confirmee')
+        ->count();
+
+    if ($reservationsConfirmees >= $trajet->places_disponibles) {
+
         return redirect()
             ->back()
-            ->with('error', 'Transition de statut non autorisée.');
+            ->with('error', 'Ce trajet est complet.');
     }
-
+}
     $reservation->update([
         'statut' => $nouveauStatut,
     ]);
