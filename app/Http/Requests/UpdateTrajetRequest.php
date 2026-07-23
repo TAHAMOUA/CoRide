@@ -28,6 +28,7 @@ class UpdateTrajetRequest extends FormRequest
             'horaire' => 'required|date',
             'places_disponibles' => 'required|integer|min:1',
             'jours_recurrence' => 'required|string|max:255',
+            'id_employe' => 'required|exists:employes,id_employe',
         ];
     }
 

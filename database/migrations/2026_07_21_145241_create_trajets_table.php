@@ -12,8 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trajets', function (Blueprint $table) {
-            $table->id();
+
+            $table->id('id_trajet');
+
+            $table->string('ville_depart');
+
+            $table->string('ville_arrivee');
+
+            $table->dateTime('horaire');
+
+            $table->integer('places_disponibles');
+
+            $table->string('jours_recurrence');
+
+            $table->foreignId('id_employe')
+                ->constrained('employes', 'id_employe')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
             $table->timestamps();
+
         });
     }
 
