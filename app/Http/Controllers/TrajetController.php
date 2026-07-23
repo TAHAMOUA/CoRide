@@ -34,13 +34,22 @@ class TrajetController extends Controller
      */
     public function store(StoreTrajetRequest $request)
     {
-        Trajet::create($request->validated());
+        $employe = Employe::findOrFail($request->id_employe);
 
-        return redirect()
-            ->route('trajets.index')
-            ->with('success', 'Trajet créé avec succès.');
+if (!in_array($employe->role, ['conducteur', 'les_deux'])) {
+
+    return redirect()
+        ->back()
+        ->withInput()
+        ->with('error', 'Seuls les conducteurs peuvent proposer un trajet.');
+}
+
+Trajet::create($request->validated());
+
+return redirect()
+    ->route('trajets.index')
+    ->with('success', 'Trajet créé avec succès.');
     }
-
     /**
      * Afficher un trajet.
      */

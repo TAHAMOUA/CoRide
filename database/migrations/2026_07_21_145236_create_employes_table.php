@@ -6,20 +6,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('employes', function (Blueprint $table) {
-            $table->id();
+
+            $table->id('id_employe');
+
+            $table->string('nom');
+
+            $table->string('email_professionnel')->unique();
+
+            $table->string('ville_residence');
+
+            $table->enum('role', [
+                'conducteur',
+                'passager',
+                'les_deux'
+            ]);
+
+            $table->foreignId('id_entreprise')
+                ->constrained('entreprises', 'id_entreprise')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('employes');
