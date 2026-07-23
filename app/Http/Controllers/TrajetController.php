@@ -20,7 +20,7 @@ class TrajetController extends Controller
     }
 
     /**
-     * Afficher le formulaire de création.
+     * Afficher le formulaire de création d'un trajet.
      */
     public function create()
     {
@@ -34,24 +34,15 @@ class TrajetController extends Controller
      */
     public function store(StoreTrajetRequest $request)
     {
-        $employe = Employe::findOrFail($request->id_employe);
+        Trajet::create($request->validated());
 
-if (!in_array($employe->role, ['conducteur', 'les_deux'])) {
-
-    return redirect()
-        ->back()
-        ->withInput()
-        ->with('error', 'Seuls les conducteurs peuvent proposer un trajet.');
-}
-
-Trajet::create($request->validated());
-
-return redirect()
-    ->route('trajets.index')
-    ->with('success', 'Trajet créé avec succès.');
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet créé avec succès.');
     }
+
     /**
-     * Afficher un trajet.
+     * Afficher les détails d'un trajet.
      */
     public function show(Trajet $trajet)
     {
@@ -69,7 +60,7 @@ return redirect()
     }
 
     /**
-     * Modifier un trajet.
+     * Mettre à jour un trajet.
      */
     public function update(UpdateTrajetRequest $request, Trajet $trajet)
     {
@@ -77,7 +68,7 @@ return redirect()
 
         return redirect()
             ->route('trajets.index')
-            ->with('success', 'Trajet modifié avec succès.');
+            ->with('success', 'Trajet mis à jour avec succès.');
     }
 
     /**
