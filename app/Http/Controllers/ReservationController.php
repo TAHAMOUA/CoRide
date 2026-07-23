@@ -2,63 +2,87 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreReservationRequest;
+use App\Http\Requests\UpdateReservationRequest;
+use App\Models\Reservation;
+use App\Models\Trajet;
+use App\Models\Employe;
 
 class ReservationController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Afficher la liste des réservations.
      */
     public function index()
     {
-        //
+        $reservations = Reservation::with(['trajet', 'employe'])->get();
+
+        return view('reservations.index', compact('reservations'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Afficher le formulaire de création.
      */
     public function create()
     {
-        //
+        $trajets = Trajet::all();
+        $employes = Employe::all();
+
+        return view('reservations.create', compact('trajets', 'employes'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Enregistrer une réservation.
      */
-    public function store(Request $request)
+    public function store(StoreReservationRequest $request)
     {
-        //
+        Reservation::create($request->validated());
+
+        return redirect()
+            ->route('reservations.index')
+            ->with('success', 'Réservation créée avec succès.');
     }
 
     /**
-     * Display the specified resource.
+     * Afficher une réservation.
      */
-    public function show(string $id)
+    public function show(Reservation $reservation)
     {
-        //
+        return view('reservations.show', compact('reservation'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Afficher le formulaire de modification.
      */
-    public function edit(string $id)
+    public function edit(Reservation $reservation)
     {
-        //
+        $trajets = Trajet::all();
+        $employes = Employe::all();
+
+        return view('reservations.edit', compact('reservation', 'trajets', 'employes'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mettre à jour une réservation.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
-        //
+        $reservation->update($request->validated());
+
+        return redirect()
+            ->route('reservations.index')
+            ->with('success', 'Réservation mise à jour avec succès.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Supprimer une réservation.
      */
-    public function destroy(string $id)
+    public function destroy(Reservation $reservation)
     {
-        //
+        $reservation->delete();
+
+        return redirect()
+            ->route('reservations.index')
+            ->with('success', 'Réservation supprimée avec succès.');
     }
 }
