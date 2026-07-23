@@ -92,14 +92,35 @@ Reservation::create($data);
     /**
      * Mettre à jour une réservation.
      */
-    public function update(UpdateReservationRequest $request, Reservation $reservation)
-    {
-        $reservation->update($request->validated());
+    /**
+ * Mettre à jour une réservation.
+ */
+public function update(UpdateReservationRequest $request, Reservation $reservation)
+{
+    $ancienStatut = $reservation->statut;
+    $nouveauStatut = $request->statut;
 
+    $transitions = [
+        'en_attente' => ['confirmee', 'refusee'],
+        'confirmee' => ['annulee'],
+        'refusee' => ['annulee'],
+        'annulee' => [],
+    ];
+
+    if (!in_array($nouveauStatut, $transitions[$ancienStatut])) {
         return redirect()
-            ->route('reservations.index')
-            ->with('success', 'Réservation mise à jour avec succès.');
+            ->back()
+            ->with('error', 'Transition de statut non autorisée.');
     }
+
+    $reservation->update([
+        'statut' => $nouveauStatut,
+    ]);
+
+    return redirect()
+        ->route('reservations.index')
+        ->with('success', 'Statut de la réservation mis à jour.');
+}
 
     /**
      * Supprimer une réservation.
