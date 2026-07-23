@@ -34,14 +34,37 @@ class ReservationController extends Controller
     /**
      * Enregistrer une réservation.
      */
-    public function store(StoreReservationRequest $request)
-    {
-        Reservation::create($request->validated());
+   public function store(StoreReservationRequest $request)
+{
+    $trajet = Trajet::findOrFail($request->id_trajet);
+
+    if ($trajet->places_disponibles <= 0) {
 
         return redirect()
-            ->route('reservations.index')
-            ->with('success', 'Réservation créée avec succès.');
+            ->back()
+            ->withInput()
+            ->with('error', 'Aucune place disponible pour ce trajet.');
     }
+
+    $reservationExiste = Reservation::where('id_trajet', $request->id_trajet)
+        ->where('id_employe', $request->id_employe)
+        ->exists();
+
+    if ($reservationExiste) {
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', 'Vous avez déjà réservé ce trajet.');
+    }
+
+    
+    Reservation::create($request->validated());
+
+    return redirect()
+        ->route('reservations.index')
+        ->with('success', 'Réservation créée avec succès.');
+}
 
     /**
      * Afficher une réservation.
