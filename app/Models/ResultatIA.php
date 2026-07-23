@@ -27,4 +27,8 @@ class ResultatIA extends Model
     {
         return $this->belongsTo(Reservation::class, 'id_reservation', 'id_reservation');
     }
+    public function resultatIA()
+{
+    return $this->hasOne(ResultatIA::class, 'id_reservation', 'id_reservation');
+}
 }
