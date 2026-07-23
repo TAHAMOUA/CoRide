@@ -44,11 +44,12 @@ class TrajetController extends Controller
     /**
      * Afficher les détails d'un trajet.
      */
-    public function show(Trajet $trajet)
-    {
-        return view('trajets.show', compact('trajet'));
-    }
+  public function show(Trajet $trajet)
+{
+    $trajet->load('employe');
 
+    return view('trajets.show', compact('trajet'));
+}
     /**
      * Afficher le formulaire de modification.
      */
