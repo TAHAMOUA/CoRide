@@ -1,65 +1,258 @@
-# CoRide — Code source (MobiliTech)
+# 🚗 CoRide
 
-Structure d'app Laravel 12 (fichiers `app/`, `database/`, `routes/`,
-`resources/views/`). A copier dans un projet `laravel new coride` existant
-(`composer require laravel/breeze laravel/ai` puis coller ces fichiers).
+## Projet réalisé par
 
-## Repartition des fichiers par developpeur
+- **Soukaina EN-NAOUR**
+- **Taha Mouaddine**
 
-### 👨‍💻 Taha — Entites, modeles, IA (moteur), seeders
+---
 
-| Fichier | Epic / Tache |
-|---|---|
-| `app/Enums/RoleEmploye.php` | Epic 2 — Identifier les entites |
-| `app/Models/Entreprise.php` | Epic 3 — Modele Entreprise |
-| `app/Models/Employe.php` | Epic 3 — Modele Employe + relations |
-| `app/Models/Trajet.php` | Epic 3 — Modele Trajet + relations |
-| `app/Models/Reservation.php` (partie relations) | Epic 3 — Modele Reservation |
-| `app/Casts/CompatibiliteIACast.php` | Epic 5 — US8, Cast personnalise |
-| `app/ValueObjects/CompatibiliteIA.php` | Epic 5 — support du Cast |
-| `app/Ai/Agents/CompatibiliteAgent.php` | Epic 5 — Installer Laravel AI |
-| `app/Services/CompatibiliteIAService.php` | Epic 5 — Service de compatibilite IA |
-| `app/Http/Controllers/ReservationController.php` | Epic 3 — Contrôleur Reservation, verif places, anti-doublon |
-| `app/Http/Controllers/TrajetController.php` (index/show) | Epic 4 — Liste des trajets / détail |
-| `database/migrations/*` (structure) | Epic 2 — Configurer la base de données |
-| `database/factories/*.php` | Epic 2 — Factories |
-| `database/seeders/*.php` | Epic 2 — Seeders + import CSV |
-| `routes/web.php` (squelette) | Epic 1 — Créer le Sprint / routes |
+# Présentation
 
-### 👩‍💻 Soukaina — Règles métier, sécurité, vues, IA (structured output)
+CoRide est une application web de covoiturage développée pour **MobiliTech**, une startup spécialisée dans les solutions de mobilité durable en entreprise.
 
-| Fichier | Epic / Tache |
-|---|---|
-| `app/Enums/StatutReservation.php` | Epic 3 — Contrôler les transitions de statut |
-| `app/Models/Reservation.php::changerStatut()` | Epic 3 — Gérer les statuts des réservations |
-| `app/Models/Trajet.php::peutEtreSupprime()` | Epic 3 — Bloquer suppression trajet confirmé |
-| `app/Http/Requests/*.php` | Epic 3 — Form Requests + validations |
-| `app/Policies/TrajetPolicy.php`, `ReservationPolicy.php` | Epic 4 — Vérifier la sécurité |
-| `app/Providers/AppServiceProvider.php` | Epic 4 — Enregistrement des policies |
-| `app/Http/Controllers/TrajetController.php` (store/update/destroy) | Epic 3 — CRUD trajets |
-| `app/Http/Controllers/DashboardController.php` | Epic 4 — Tableau de bord conducteur |
-| `app/Ai/Agents/CompatibiliteAgent.php::schema()` | Epic 5 — Structured Output |
-| `resources/views/**/*.blade.php` | Epic 4 — Vues Blade (liste, détail, réservations, dashboard) |
-| Tests sur `database/seeders/data/*.csv` | Epic 5 — Tester les réponses IA / tests finaux |
+L'objectif est de permettre aux employés d'une même entreprise de partager leurs trajets domicile-travail tout en utilisant une intelligence artificielle pour évaluer la compatibilité entre un conducteur et un passager.
 
-## Regles de gestion couvertes dans le code
+---
 
-- Un employe = un email pro unique, une seule entreprise (`employes.email` unique, `entreprise_id` NOT NULL).
-- Conducteur/passager/les deux → `RoleEmploye` + `Employe::estConducteur()/estPassager()`.
-- Places vs reservations confirmees → `Trajet::placesRestantes()`, verifie dans `Reservation::changerStatut()`.
-- Anti-doublon reservation → contrainte unique `(trajet_id, passager_id)` + `StoreReservationRequest`.
-- Transitions de statut controlees → `StatutReservation::transitionsAutorisees()` + `Reservation::changerStatut()`.
-- Suppression bloquee si reservations confirmees → `Trajet::peutEtreSupprime()` + `TrajetPolicy::delete()`.
-- Score IA uniquement cote passager, jamais cote conducteur → verifie dans `TrajetController::show()`
-  (`$user->estPassager() && ! $estConducteurDuTrajet`) avant tout appel au service IA.
-- Integrite referentielle → `cascadeOnDelete()` sur toutes les cles etrangeres.
+# Technologies utilisées
 
-## Mise en route (une fois copie dans un projet Laravel)
+- Laravel 13
+- PHP 8.3
+- MySQL
+- Blade
+- Laravel Breeze
+- Laravel AI
+- Eloquent ORM
+
+---
+
+# Architecture du projet
+
+Le projet suit l'architecture **MVC (Model – View – Controller)** de Laravel.
+
+## Models
+
+Les modèles représentent les entités principales :
+
+- Entreprise
+- Employe
+- Trajet
+- Reservation
+
+Ils contiennent les relations Eloquent ainsi que les règles métier.
+
+---
+
+## Controllers
+
+Les contrôleurs gèrent les interactions entre les vues et les modèles.
+
+Principaux contrôleurs :
+
+- TrajetController
+- ReservationController
+- DashboardController
+
+---
+
+## Form Requests
+
+Les Form Requests assurent la validation des données saisies avant leur traitement.
+
+Exemples :
+
+- création d'un trajet
+- modification d'un trajet
+- réservation d'une place
+
+---
+
+## Policies
+
+Les Policies assurent la sécurité de l'application en contrôlant les autorisations des utilisateurs.
+
+Exemples :
+
+- suppression d'un trajet
+- modification d'une réservation
+
+---
+
+## Enums
+
+Les Enums permettent de représenter des valeurs métier.
+
+- RoleEmploye
+- StatutReservation
+
+---
+
+## Services
+
+Les Services regroupent la logique métier complexe afin d'alléger les contrôleurs.
+
+Exemple :
+
+- CompatibiliteIAService
+
+---
+
+## Value Objects et Casts
+
+Le projet utilise un Value Object ainsi qu'un Cast personnalisé afin de manipuler les résultats de l'IA de manière propre.
+
+- CompatibiliteIA
+- CompatibiliteIACast
+
+---
+
+# Structure du projet
+
+```
+app/
+ ├── Ai/
+ ├── Casts/
+ ├── Enums/
+ ├── Http/
+ │    ├── Controllers/
+ │    └── Requests/
+ ├── Models/
+ ├── Policies/
+ ├── Providers/
+ ├── Services/
+ └── ValueObjects/
+
+database/
+ ├── migrations/
+ ├── factories/
+ ├── seeders/
+
+resources/
+ └── views/
+
+routes/
+ └── web.php
+```
+
+---
+
+# Brique Intelligence Artificielle
+
+Le projet intègre Laravel AI afin de calculer un score de compatibilité entre un conducteur et un passager.
+
+## Fonctionnement
+
+1. Le passager consulte un trajet.
+2. Le contrôleur vérifie que l'utilisateur est bien un passager.
+3. Le contrôleur appelle le **CompatibiliteIAService**.
+4. Le service communique avec **CompatibiliteAgent**.
+5. L'agent retourne une réponse structurée.
+6. Cette réponse est convertie grâce au **CompatibiliteIACast**.
+7. Les données sont stockées dans le **Value Object CompatibiliteIA**.
+8. Le score est affiché dans la vue.
+
+L'IA est utilisée uniquement pour les passagers et jamais pour le conducteur du trajet.
+
+---
+
+# Principales règles métier
+
+- Un employé possède un email professionnel unique.
+- Un employé appartient à une seule entreprise.
+- Une réservation est unique par passager et par trajet.
+- Les transitions de statut sont contrôlées.
+- Un trajet confirmé ne peut pas être supprimé.
+- Le nombre de réservations confirmées ne peut pas dépasser le nombre de places disponibles.
+- Les Policies protègent les opérations sensibles.
+- L'intégrité référentielle est assurée grâce aux clés étrangères.
+
+---
+
+# Répartition des tâches
+
+## 👨‍💻 Taha Mouaddine
+
+- Modèles Eloquent
+- Relations entre les entités
+- Migrations
+- Factories
+- Seeders
+- Service IA
+- Agent IA
+- Routes principales
+- Contrôleurs de consultation
+
+---
+
+## 👩‍💻 Soukaina EN-NAOUR
+
+- Gestion des statuts des réservations
+- Validation des formulaires
+- Policies et sécurité
+- CRUD des trajets
+- Dashboard conducteur
+- Structured Output de Laravel AI
+- Vues Blade
+- Tests de l'intelligence artificielle
+
+---
+
+# Installation
 
 ```bash
 composer install
+```
+
+```bash
 cp .env.example .env
+```
+
+Configurer la base de données dans le fichier `.env`.
+
+```bash
 php artisan key:generate
+```
+
+```bash
 php artisan migrate:fresh --seed
+```
+
+```bash
+npm install
+```
+
+```bash
+npm run dev
+```
+
+```bash
 php artisan serve
 ```
+
+---
+
+# Fonctionnalités
+
+- Authentification avec Laravel Breeze
+- Gestion des entreprises
+- Gestion des employés
+- Gestion des trajets
+- Réservation de places
+- Tableau de bord conducteur
+- Validation des formulaires
+- Gestion des autorisations
+- Calcul IA de compatibilité
+- Affichage des résultats IA
+- Base de données alimentée par Seeders
+
+---
+
+# Auteur
+
+Projet réalisé dans le cadre de la formation Simplon.
+
+Développé par :
+
+- **Soukaina EN-NAOUR**
+- **Taha Mouaddine**
