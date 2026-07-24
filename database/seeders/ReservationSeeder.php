@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Reservation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Tache: Taha (Epic 2 - Creer les seeders/factories + import CSV)
@@ -17,29 +18,50 @@ class ReservationSeeder extends Seeder
 {
     public function run(): void
     {
-        $path = database_path('seeders/data/reservations.csv');
+        $path = database_path('data/reservations.csv');
 
         if (! is_file($path)) {
-            Reservation::factory()->count(35)->create();
-
             return;
         }
 
-        $lignes = array_map('str_getcsv', file($path));
-        $entetes = array_shift($lignes);
-
-        foreach ($lignes as $ligne) {
-            $ligne = array_combine($entetes, $ligne);
-
-            Reservation::updateOrCreate(
-                ['id' => (int) $ligne['id']],
-                [
-                    'trajet_id' => (int) $ligne['trajet_id'],
-                    'passager_id' => (int) $ligne['passager_id'],
-                    'statut' => $ligne['statut'],
-                    'date_reservation' => $ligne['date_reservation'],
-                ]
-            );
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return;
         }
+
+        $headers = fgetcsv($handle);
+        if (! is_array($headers)) {
+            fclose($handle);
+            return;
+        }
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) === 0) {
+                continue;
+            }
+
+            $ligne = array_combine($headers, $row);
+            if ($ligne === false) {
+                continue;
+            }
+
+            $id = (int) ($ligne['id'] ?? 0);
+            $payload = [
+                'trajet_id' => isset($ligne['trajet_id']) ? (int) $ligne['trajet_id'] : null,
+                'passager_id' => isset($ligne['passager_id']) ? (int) $ligne['passager_id'] : null,
+                'statut' => $ligne['statut'] ?? null,
+                'date_reservation' => $ligne['date_reservation'] ?? null,
+                'updated_at' => now(),
+            ];
+
+            if ($id > 0) {
+                $payload['created_at'] = now();
+                DB::table('reservations')->updateOrInsert(['id' => $id], $payload);
+            } else {
+                DB::table('reservations')->insert($payload + ['created_at' => now()]);
+            }
+        }
+
+        fclose($handle);
     }
 }
