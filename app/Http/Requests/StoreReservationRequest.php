@@ -2,42 +2,59 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\Reservation;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * Tache: Soukaina (Epic 3 - Creer les Form Requests / Empecher les doublons)
+ */
 class StoreReservationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->estPassager() ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-  public function rules(): array
+    public function rules(): array
     {
+        $trajet = $this->route('trajet');
+
         return [
-            'id_trajet' => 'required|exists:trajets,id_trajet',
-            'id_employe' => 'required|exists:employes,id_employe',
-            'statut' => 'nullable',
-            'date_reservation' => 'required|date',
+            // Un meme employe ne peut pas reserver deux fois le meme trajet.
+            'trajet_id' => [
+                Rule::unique('reservations', 'trajet_id')
+                    ->where('passager_id', $this->user()?->id)
+                    ->ignore(null),
+            ],
         ];
     }
 
-    public function messages(): array
+    public function withValidator($validator): void
     {
-        return [
-            'id_trajet.required' => 'Le trajet est obligatoire.',
-            'id_trajet.exists' => 'Le trajet est introuvable.',
-            'id_employe.required' => "L'employé est obligatoire.",
-            'statut.in' => 'Le statut est invalide.',
-            'date_reservation.required' => 'La date de réservation est obligatoire.',
-        ];
+        $validator->after(function ($validator) {
+            $trajet = $this->route('trajet');
+
+            if (! $trajet) {
+                return;
+            }
+
+            if ($trajet->conducteur_id === $this->user()->id) {
+                $validator->errors()->add('trajet_id', 'Vous ne pouvez pas reserver votre propre trajet.');
+            }
+
+            if (! $trajet->aDesPlacesDisponibles()) {
+                $validator->errors()->add('trajet_id', 'Ce trajet est complet.');
+            }
+
+            $dejaReserve = Reservation::query()
+                ->where('trajet_id', $trajet->id)
+                ->where('passager_id', $this->user()->id)
+                ->exists();
+
+            if ($dejaReserve) {
+                $validator->errors()->add('trajet_id', 'Vous avez deja reserve ce trajet.');
+            }
+        });
     }
 }

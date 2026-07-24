@@ -4,27 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+// Tache: Taha (Epic 3 - Creer le modele Entreprise)
 class Entreprise extends Model
 {
     use HasFactory;
 
-    protected $table = 'entreprises';
+    protected $fillable = ['nom'];
 
-    protected $primaryKey = 'id_entreprise';
-
-    protected $fillable = [
-        'nom',
-        'secteur',
-        'adresse',
-        'ville',
-    ];
-
-    /**
-     * Une entreprise possède plusieurs employés.
-     */
-    public function employes()
+    public function employes(): HasMany
     {
-        return $this->hasMany(Employe::class, 'id_entreprise', 'id_entreprise');
+        return $this->hasMany(Employe::class);
     }
 }

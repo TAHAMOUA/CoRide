@@ -2,43 +2,36 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Tache: Soukaina (Epic 3 - Creer les Form Requests)
+ */
 class StoreTrajetRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        // Seul un employe conducteur (ou "les_deux") peut publier un trajet.
+        return $this->user()?->estConducteur() ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-                     'ville_depart' => 'required|string|max:100',
-            'ville_arrivee' => 'required|string|max:100',
-            'horaire' => 'required|date',
-            'places_disponibles' => 'required|integer|min:1',
-            'jours_recurrence' => 'required|string|max:255',
-            'id_employe' => 'required|exists:employes,id_employe',
+            'ville_depart' => ['required', 'string', 'max:100'],
+            'ville_arrivee' => ['required', 'string', 'max:100', 'different:ville_depart'],
+            'horaire' => ['required', 'date', 'after:now'],
+            'places_disponibles' => ['required', 'integer', 'min:1', 'max:8'],
+            'jours_recurrence' => ['nullable', 'array'],
+            'jours_recurrence.*' => ['string', 'in:lundi,mardi,mercredi,jeudi,vendredi,samedi,dimanche'],
         ];
     }
-public function messages(): array
+
+    public function messages(): array
     {
         return [
-            'ville_depart.required' => 'La ville de départ est obligatoire.',
-            'ville_arrivee.required' => 'La ville d’arrivée est obligatoire.',
-            'horaire.required' => "L'horaire est obligatoire.",
-            'places_disponibles.min' => 'Le trajet doit avoir au moins une place disponible.',
-            'id_employe.exists' => 'Le conducteur sélectionné est invalide.',
+            'ville_arrivee.different' => "La ville d'arrivee doit etre differente de la ville de depart.",
+            'horaire.after' => "L'horaire du trajet doit etre dans le futur.",
         ];
     }
 }

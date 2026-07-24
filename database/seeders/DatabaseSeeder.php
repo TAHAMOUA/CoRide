@@ -2,24 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * Tache: Taha (Epic 2 - Creer les seeders/factories + import CSV)
+ *
+ * Placez les fichiers fournis par MobiliTech dans database/seeders/data/ :
+ *   employes.csv, trajets.csv, reservations.csv
+ * puis lancez : php artisan migrate:fresh --seed
+ */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            EntrepriseSeeder::class,
+            EmployeSeeder::class,
+            TrajetSeeder::class,
+            ReservationSeeder::class,
         ]);
     }
 }

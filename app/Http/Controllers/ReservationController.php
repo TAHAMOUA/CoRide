@@ -3,154 +3,69 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservationRequest;
-use App\Http\Requests\UpdateReservationRequest;
+use App\Http\Requests\UpdateReservationStatusRequest;
 use App\Models\Reservation;
 use App\Models\Trajet;
-use App\Models\Employe;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
+/**
+ * Tache creation reservation: Taha (Epic 3 - Creer le contrôleur Reservation /
+ *   Vérifier les places disponibles / Empêcher les réservations en doublon)
+ * Tache gestion des statuts: Soukaina (Epic 3 - Gerer les statuts des reservations /
+ *   Controler les transitions de statut)
+ */
 class ReservationController extends Controller
 {
     /**
-     * Afficher la liste des réservations.
+     * Un passager reserve un trajet (statut initial : en_attente).
+     * Regle de gestion : pas plus de reservations confirmees que de places,
+     * et un employe ne peut pas reserver deux fois le meme trajet.
+     * Ces deux regles sont deja verifiees dans StoreReservationRequest.
      */
-    public function index()
+    public function store(StoreReservationRequest $request, Trajet $trajet): RedirectResponse
     {
-Reservation::with(['trajet','employe'])
-    ->latest()
-    ->get();
+        $reservation = Reservation::create([
+            'trajet_id' => $trajet->id,
+            'passager_id' => $request->user()->id,
+            'statut' => 'en_attente',
+            'date_reservation' => now(),
+        ]);
+
+        return redirect()
+            ->route('reservations.index')
+            ->with('status', 'Demande de reservation envoyee (en attente de confirmation).');
+    }
+
+    /**
+     * Page "Mes reservations" : historique des reservations du passager connecte.
+     */
+    public function index(Request $request): View
+    {
+        $reservations = $request->user()
+            ->reservations()
+            ->with(['trajet.conducteur'])
+            ->orderByDesc('date_reservation')
+            ->paginate(10);
+
         return view('reservations.index', compact('reservations'));
     }
 
     /**
-     * Afficher le formulaire de création.
+     * Changement de statut d'une reservation (confirmer/refuser par le
+     * conducteur, ou annuler par le conducteur ou le passager).
+     * La matrice de transitions autorisees est appliquee dans
+     * Reservation::changerStatut() (App\Enums\StatutReservation).
      */
-    public function create()
+    public function updateStatus(UpdateReservationStatusRequest $request, Reservation $reservation): RedirectResponse
     {
-        $trajets = Trajet::all();
-        $employes = Employe::all();
+        try {
+            $reservation->changerStatut($request->enum('statut', \App\Enums\StatutReservation::class));
+        } catch (\DomainException $e) {
+            return back()->withErrors(['statut' => $e->getMessage()]);
+        }
 
-        return view('reservations.create', compact('trajets', 'employes'));
-    }
-
-    /**
-     * Enregistrer une réservation.
-     */
-   public function store(StoreReservationRequest $request)
-{
-    $trajet = Trajet::findOrFail($request->id_trajet);
-
-   $reservationsConfirmees = $trajet->reservations()
-    ->where('statut', 'confirmee')
-    ->count();
-
-if ($reservationsConfirmees >= $trajet->places_disponibles) {
-    return redirect()
-        ->back()
-        ->withInput()
-        ->with('error', 'Ce trajet est complet.');
-}
-    $reservationExiste = Reservation::where('id_trajet', $request->id_trajet)
-        ->where('id_employe', $request->id_employe)
-        ->exists();
-
-    if ($reservationExiste) {
-
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', 'Vous avez déjà réservé ce trajet.');
-    }
-
-    
-    $data = $request->validated();
-
-$data['statut'] = 'en_attente';
-$data['date_reservation'] = now();
-Reservation::create($data);
-
-    return redirect()
-        ->route('reservations.index')
-        ->with('success', 'Réservation créée avec succès.');
-}
-
-    /**
-     * Afficher une réservation.
-     */
-    public function show(Reservation $reservation)
-    {
-$reservation->load(['trajet', 'employe']);
-
-return view('reservations.show', compact('reservation'));    }
-
-    /**
-     * Afficher le formulaire de modification.
-     */
-    public function edit(Reservation $reservation)
-    {
-        $trajets = Trajet::all();
-        $employes = Employe::all();
-
-        return view('reservations.edit', compact('reservation', 'trajets', 'employes'));
-    }
-
-    /**
-     * Mettre à jour une réservation.
-     */
-  
-public function update(UpdateReservationRequest $request, Reservation $reservation)
-{
-    $ancienStatut = $reservation->statut;
-    $nouveauStatut = $request->statut;
-
-    $transitions = [
-        'en_attente' => ['confirmee', 'refusee'],
-        'confirmee' => ['annulee'],
-        'refusee' => ['annulee'],
-        'annulee' => [],
-    ];
-
-    if (
-    !isset($transitions[$ancienStatut]) ||
-    !in_array($nouveauStatut, $transitions[$ancienStatut])
-) {
-    return redirect()
-        ->back()
-        ->with('error', 'Transition de statut non autorisée.');
-}
-// Vérifier les places disponibles avant la confirmation
-if ($nouveauStatut === 'confirmee') {
-
-    $trajet = $reservation->trajet;
-
-    $reservationsConfirmees = $trajet->reservations()
-        ->where('statut', 'confirmee')
-        ->count();
-
-    if ($reservationsConfirmees >= $trajet->places_disponibles) {
-
-        return redirect()
-            ->back()
-            ->with('error', 'Ce trajet est complet.');
-    }
-}
-    $reservation->update([
-        'statut' => $nouveauStatut,
-    ]);
-
-    return redirect()
-        ->route('reservations.index')
-        ->with('success', 'Statut de la réservation mis à jour.');
-}
-
-    /**
-     * Supprimer une réservation.
-     */
-    public function destroy(Reservation $reservation)
-    {
-        $reservation->delete();
-
-        return redirect()
-            ->route('reservations.index')
-            ->with('success', 'Réservation supprimée avec succès.');
+        return back()->with('status', 'Statut de la reservation mis a jour.');
     }
 }

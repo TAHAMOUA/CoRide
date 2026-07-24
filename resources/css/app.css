@@ -1,3 +1,96 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700|space-grotesk:500,600,700|ibm-plex-mono:400,500,600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-night-950 text-paper font-sans antialiased;
+        background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(31, 138, 95, 0.10), transparent);
+        background-attachment: fixed;
+    }
+
+    h1, h2, h3, h4 {
+        @apply font-display text-paper;
+    }
+
+    ::selection {
+        @apply bg-route-700 text-paper;
+    }
+}
+
+@layer components {
+    /* Route line: the CoRide signature — a departure-board style
+       depart-dot / line / arrive-dot, echoing the app's core content. */
+    .route-line {
+        @apply relative flex items-center gap-2;
+    }
+    .route-line::before {
+        content: '';
+        @apply absolute left-1 right-1 top-1/2 h-px bg-night-700 -translate-y-1/2 -z-10;
+    }
+    .route-dot {
+        @apply h-2 w-2 rounded-full bg-route-400 ring-4 ring-night-950;
+    }
+    .route-dot--end {
+        @apply bg-ink-400;
+    }
+
+    .card {
+        @apply bg-night-900 border border-night-700 rounded-xl shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset];
+    }
+    .card-hover {
+        @apply transition duration-150 hover:border-route-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+               transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-night-950 disabled:opacity-40 disabled:cursor-not-allowed;
+    }
+    .btn-primary {
+        @apply btn bg-paper text-night-950 hover:bg-white focus:ring-paper;
+    }
+    .btn-accent {
+        @apply btn bg-route-500 text-white hover:bg-route-400 focus:ring-route-500;
+    }
+    .btn-secondary {
+        @apply btn bg-night-800 text-paper border border-night-700 hover:bg-night-700 focus:ring-night-600;
+    }
+    .btn-danger {
+        @apply btn bg-rust-500 text-white hover:bg-rust-600 focus:ring-rust-500;
+    }
+    .btn-ghost {
+        @apply btn bg-transparent text-ink-400 hover:text-paper hover:bg-night-800 focus:ring-night-600;
+    }
+    .btn-link {
+        @apply text-sm font-medium text-route-400 underline decoration-route-700 underline-offset-4 hover:decoration-route-400 transition;
+    }
+
+    .field-label {
+        @apply block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1;
+    }
+    .field-input {
+        @apply block w-full rounded-lg border-night-700 bg-night-800 text-paper shadow-sm placeholder:text-ink-400/60
+               focus:border-route-500 focus:ring-route-500 text-sm;
+    }
+    .field-error {
+        @apply text-xs text-rust-400 mt-1;
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+    .badge-pending  { @apply bg-amber-900 text-amber-300; }
+    .badge-confirmed{ @apply bg-route-900 text-route-300; }
+    .badge-refused  { @apply bg-rust-900 text-rust-300; }
+    .badge-cancelled{ @apply bg-night-800 text-ink-400; }
+
+    .eyebrow {
+        @apply font-mono text-xs uppercase tracking-[0.2em] text-route-400;
+    }
+
+    .stat-time {
+        @apply font-mono tabular-nums;
+    }
+}

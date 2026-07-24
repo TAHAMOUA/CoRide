@@ -2,39 +2,73 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\StatutReservation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Un trajet est propose par un employe conducteur.
+ * Tache: Taha (Epic 3 - Creer le modele Trajet + relations)
+ */
 class Trajet extends Model
 {
     use HasFactory;
 
-    protected $table = 'trajets';
-
-    protected $primaryKey = 'id_trajet';
-
     protected $fillable = [
+        'conducteur_id',
         'ville_depart',
         'ville_arrivee',
         'horaire',
         'places_disponibles',
         'jours_recurrence',
-        'id_employe',
     ];
 
-    /**
-     * Un trajet appartient à un employé (conducteur).
-     */
-    public function employe()
+    protected function casts(): array
     {
-        return $this->belongsTo(Employe::class, 'id_employe', 'id_employe');
+        return [
+            'horaire' => 'datetime',
+            'jours_recurrence' => 'array',
+            'places_disponibles' => 'integer',
+        ];
+    }
+
+    public function conducteur(): BelongsTo
+    {
+        return $this->belongsTo(Employe::class, 'conducteur_id');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function reservationsConfirmees(): HasMany
+    {
+        return $this->reservations()->where('statut', StatutReservation::Confirmee->value);
     }
 
     /**
-     * Un trajet possède plusieurs réservations.
+     * Regle de gestion : un trajet ne peut pas avoir plus de reservations
+     * validees (confirmees) que de places disponibles.
      */
-    public function reservations()
+    public function placesRestantes(): int
     {
-        return $this->hasMany(Reservation::class, 'id_trajet', 'id_trajet');
+        return max(0, $this->places_disponibles - $this->reservationsConfirmees()->count());
+    }
+
+    public function aDesPlacesDisponibles(): bool
+    {
+        return $this->placesRestantes() > 0;
+    }
+
+    /**
+     * Regle de gestion : un trajet ne peut pas etre supprime s'il a des
+     * reservations confirmees.
+     */
+    public function peutEtreSupprime(): bool
+    {
+        return $this->reservationsConfirmees()->doesntExist();
     }
 }

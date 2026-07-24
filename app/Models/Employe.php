@@ -2,39 +2,75 @@
 
 namespace App\Models;
 
+use App\Enums\RoleEmploye;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Employe extends Model
+/**
+ * Un employe appartient a une seule entreprise et possede un email professionnel unique.
+ * Il peut etre conducteur, passager, ou les deux selon les trajets (role).
+ * Tache: Taha (Epic 3 - Creer le modele Employe / relations Eloquent)
+ */
+class Employe extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $table = 'employes';
 
-    protected $primaryKey = 'id_employe';
-
     protected $fillable = [
         'nom',
-        'email_professionnel',
+        'email',
         'password',
+        'entreprise_id',
         'ville_residence',
         'role',
-        'id_entreprise',
     ];
 
-   
- 
-    public function entreprise()
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
     {
-        return $this->belongsTo(Entreprise::class, 'id_entreprise', 'id_entreprise');
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'role' => RoleEmploye::class,
+        ];
     }
 
-    public function trajets()
+    public function entreprise(): BelongsTo
     {
-        return $this->hasMany(Trajet::class, 'id_employe', 'id_employe');
+        return $this->belongsTo(Entreprise::class);
     }
 
-    public function reservations()
+    /**
+     * Trajets proposes par cet employe en tant que conducteur.
+     */
+    public function trajetsProposes(): HasMany
     {
-        return $this->hasMany(Reservation::class, 'id_employe', 'id_employe');
+        return $this->hasMany(Trajet::class, 'conducteur_id');
+    }
+
+    /**
+     * Reservations effectuees par cet employe en tant que passager.
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class, 'passager_id');
+    }
+
+    public function estConducteur(): bool
+    {
+        return $this->role->peutConduire();
+    }
+
+    public function estPassager(): bool
+    {
+        return $this->role->peutReserver();
     }
 }

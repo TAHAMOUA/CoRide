@@ -1,61 +1,69 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Détails du trajet
-        </h2>
-    </x-slot>
+@extends('layouts.coride')
 
-    <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+@section('titre', 'Detail du trajet')
 
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+@section('contenu')
+    <h1 class="text-2xl font-display font-semibold mb-2 text-paper">
+        {{ $trajet->ville_depart }} &rarr; {{ $trajet->ville_arrivee }}
+    </h1>
+    <p class="text-ink-400 mb-1">Conducteur : {{ $trajet->conducteur->nom }}</p>
+    <p class="text-ink-400 mb-1 stat-time">Horaire : {{ $trajet->horaire->format('d/m/Y H:i') }}</p>
+    <p class="text-ink-400 mb-1">
+        Jours de recurrence :
+        {{ $trajet->jours_recurrence ? implode(', ', $trajet->jours_recurrence) : 'ponctuel' }}
+    </p>
+    <p class="text-ink-400 mb-6">
+        Places restantes : {{ $trajet->placesRestantes() }} / {{ $trajet->places_disponibles }}
+    </p>
 
-                <div class="mb-4">
-                    <strong>Conducteur :</strong>
-                    {{ $trajet->employe->nom }}
+    @auth
+        @if (! $estConducteurDuTrajet && auth()->user()->estPassager())
+            {{-- Le score IA n'est calcule qu'a la demande explicite du passager. --}}
+            <form method="GET" class="mb-4 flex items-end gap-2">
+                <input type="hidden" name="evaluer" value="1">
+                <div>
+                    <label class="field-label">Horaire souhaite (optionnel)</label>
+                    <input type="time" name="horaire_souhaite" value="{{ request('horaire_souhaite') }}"
+                           class="field-input text-sm">
                 </div>
+                <button type="submit" class="btn-secondary text-sm">
+                    Voir la compatibilite IA
+                </button>
+            </form>
 
-                <div class="mb-4">
-                    <strong>Ville de départ :</strong>
-                    {{ $trajet->ville_depart }}
+            @if ($erreurIA)
+                <div class="mb-4 rounded-lg border border-rust-700 bg-rust-900 p-4 text-sm text-rust-300">
+                    {{ $erreurIA }}
                 </div>
+            @endif
 
-                <div class="mb-4">
-                    <strong>Ville d'arrivée :</strong>
-                    {{ $trajet->ville_arrivee }}
+            @if ($compatibilite)
+                <div class="mb-4 card p-4">
+                    <div class="flex items-center justify-between">
+                        <span class="eyebrow">Score de compatibilite</span>
+                        <span class="text-xl font-display font-bold text-route-400">{{ $compatibilite->score }}/100</span>
+                    </div>
+                    <p class="text-sm text-paper mt-2">{{ $compatibilite->justification }}</p>
+                    @if ($compatibilite->horaireSuggere)
+                        <p class="text-sm text-ink-400 mt-1">
+                            Horaire suggere : {{ $compatibilite->horaireSuggere }}
+                        </p>
+                    @endif
                 </div>
+            @endif
 
-                <div class="mb-4">
-                    <strong>Horaire :</strong>
-                    {{ \Carbon\Carbon::parse($trajet->horaire)->format('d/m/Y H:i') }}
-                </div>
-
-                <div class="mb-4">
-                    <strong>Places disponibles :</strong>
-                    {{ $trajet->places_disponibles }}
-                </div>
-
-                <div class="mb-6">
-                    <strong>Jours de récurrence :</strong>
-                    {{ $trajet->jours_recurrence }}
-                </div>
-
-                <div class="flex gap-3">
-
-                    <a href="{{ route('trajets.edit', $trajet) }}"
-                       class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
-                        Modifier
-                    </a>
-
-                    <a href="{{ route('trajets.index') }}"
-                       class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
-                        Retour
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-</x-app-layout>
+            @if ($trajet->aDesPlacesDisponibles())
+                <form method="POST" action="{{ route('reservations.store', $trajet) }}">
+                    @csrf
+                    <button type="submit" class="btn-accent">
+                        Reserver ce trajet
+                    </button>
+                </form>
+            @else
+                <p class="text-rust-400 font-medium">Ce trajet est complet.</p>
+            @endif
+        @endif
+    @else
+        <p><a href="{{ route('login') }}" class="btn-link">Connectez-vous</a> pour reserver.</p>
+    @endauth
+@endsection

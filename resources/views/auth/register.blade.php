@@ -2,18 +2,55 @@
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
-        <!-- Name -->
+        <!-- Nom -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <x-input-label for="nom" :value="__('Nom')" />
+            <x-text-input id="nom" class="block mt-1 w-full" type="text" name="nom" :value="old('nom')" required autofocus autocomplete="name" />
+            <x-input-error :messages="$errors->get('nom')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
+        <!-- Email professionnel -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="__('Email professionnel')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <!-- Entreprise -->
+        <div class="mt-4">
+            <x-input-label for="entreprise_id" :value="__('Entreprise')" />
+            <select id="entreprise_id" name="entreprise_id" required
+                    class="block mt-1 w-full bg-night-800 border-night-700 text-paper focus:border-route-500 focus:ring-route-500 rounded-md shadow-sm">
+                <option value="">-- Choisir --</option>
+                @foreach ($entreprises as $entreprise)
+                    <option value="{{ $entreprise->id }}" @selected(old('entreprise_id') == $entreprise->id)>
+                        {{ $entreprise->nom }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('entreprise_id')" class="mt-2" />
+        </div>
+
+        <!-- Ville de residence -->
+        <div class="mt-4">
+            <x-input-label for="ville_residence" :value="__('Ville de residence')" />
+            <x-text-input id="ville_residence" class="block mt-1 w-full" type="text" name="ville_residence" :value="old('ville_residence')" required />
+            <x-input-error :messages="$errors->get('ville_residence')" class="mt-2" />
+        </div>
+
+        <!-- Role -->
+        <div class="mt-4">
+            <x-input-label for="role" :value="__('Role')" />
+            <select id="role" name="role" required
+                    class="block mt-1 w-full bg-night-800 border-night-700 text-paper focus:border-route-500 focus:ring-route-500 rounded-md shadow-sm">
+                <option value="">-- Choisir --</option>
+                @foreach (\App\Enums\RoleEmploye::cases() as $role)
+                    <option value="{{ $role->value }}" @selected(old('role') === $role->value)>
+                        {{ $role->label() }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('role')" class="mt-2" />
         </div>
 
         <!-- Password -->
@@ -40,7 +77,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
+            <a class="underline text-sm text-ink-400 hover:text-paper rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-night-950 focus:ring-route-500" href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
 

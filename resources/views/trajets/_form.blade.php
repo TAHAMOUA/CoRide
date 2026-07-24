@@ -1,11 +1,11 @@
 <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Conducteur
     </label>
 
     <select
         name="id_employe"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
         <option value="">-- Choisir un conducteur --</option>
 
@@ -20,12 +20,12 @@
     </select>
 
     @error('id_employe')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
 <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Ville de départ
     </label>
 
@@ -33,15 +33,15 @@
         type="text"
         name="ville_depart"
         value="{{ old('ville_depart', $trajet->ville_depart ?? '') }}"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
     @error('ville_depart')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
 <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Ville d'arrivée
     </label>
 
@@ -49,15 +49,15 @@
         type="text"
         name="ville_arrivee"
         value="{{ old('ville_arrivee', $trajet->ville_arrivee ?? '') }}"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
     @error('ville_arrivee')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
 <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Horaire
     </label>
 
@@ -65,15 +65,15 @@
         type="datetime-local"
         name="horaire"
         value="{{ old('horaire', isset($trajet) ? \Carbon\Carbon::parse($trajet->horaire)->format('Y-m-d\TH:i') : '') }}"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
     @error('horaire')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
 <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Places disponibles
     </label>
 
@@ -82,15 +82,15 @@
         name="places_disponibles"
         min="1"
         value="{{ old('places_disponibles', $trajet->places_disponibles ?? '') }}"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
     @error('places_disponibles')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
 <div class="mb-6">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label class="field-label">
         Jours de récurrence
     </label>
 
@@ -98,10 +98,10 @@
         type="text"
         name="jours_recurrence"
         value="{{ old('jours_recurrence', $trajet->jours_recurrence ?? '') }}"
-        class="w-full mt-1 rounded-md border-gray-300 shadow-sm">
+        class="field-input">
 
     @error('jours_recurrence')
-        <p class="text-red-500 text-sm">{{ $message }}</p>
+        <p class="field-error">{{ $message }}</p>
     @enderror
 </div>
 
@@ -109,7 +109,7 @@
 
     <button
         type="submit"
-        class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded">
+        class="btn-accent">
 
         Enregistrer
 
@@ -117,7 +117,7 @@
 
     <a
         href="{{ route('trajets.index') }}"
-        class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded">
+        class="btn-secondary">
 
         Retour
 

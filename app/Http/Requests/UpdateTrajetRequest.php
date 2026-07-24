@@ -2,43 +2,40 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Tache: Soukaina (Epic 3 - Creer les Form Requests)
+ */
 class UpdateTrajetRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        // Seul le conducteur proprietaire du trajet peut le modifier (voir TrajetPolicy).
+        return $this->user()?->can('update', $this->route('trajet')) ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-       public function rules(): array
+    public function rules(): array
     {
         return [
-            'ville_depart' => 'required|string|max:100',
-            'ville_arrivee' => 'required|string|max:100',
-            'horaire' => 'required|date',
-            'places_disponibles' => 'required|integer|min:1',
-            'jours_recurrence' => 'required|string|max:255',
-            'id_employe' => 'required|exists:employes,id_employe',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'ville_depart.required' => 'La ville de départ est obligatoire.',
-            'ville_arrivee.required' => 'La ville d’arrivée est obligatoire.',
-            'horaire.required' => "L'horaire est obligatoire.",
-            'places_disponibles.min' => 'Le nombre de places doit être supérieur à zéro.',
+            'ville_depart' => ['required', 'string', 'max:100'],
+            'ville_arrivee' => ['required', 'string', 'max:100', 'different:ville_depart'],
+            'horaire' => ['required', 'date'],
+            'places_disponibles' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:8',
+                // On ne peut pas reduire les places sous le nombre de reservations deja confirmees.
+                function ($attribute, $value, $fail) {
+                    $trajet = $this->route('trajet');
+                    if ($trajet && $value < $trajet->reservationsConfirmees()->count()) {
+                        $fail('Le nombre de places ne peut pas etre inferieur aux reservations deja confirmees.');
+                    }
+                },
+            ],
+            'jours_recurrence' => ['nullable', 'array'],
+            'jours_recurrence.*' => ['string', 'in:lundi,mardi,mercredi,jeudi,vendredi,samedi,dimanche'],
         ];
     }
 }

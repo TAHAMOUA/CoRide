@@ -2,45 +2,67 @@
 
 namespace App\Models;
 
+use App\Casts\CompatibiliteIACast;
+use App\Enums\StatutReservation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Une reservation relie un employe passager a un trajet.
+ * Tache modele: Taha (Epic 3) — Tache transitions de statut: Soukaina (Epic 3)
+ */
 class Reservation extends Model
 {
     use HasFactory;
 
-    protected $table = 'reservations';
-
-    protected $primaryKey = 'id_reservation';
-
     protected $fillable = [
+        'trajet_id',
+        'passager_id',
         'statut',
         'date_reservation',
-        'id_trajet',
-        'id_employe',
+        'compatibilite_ia',
     ];
 
-    /**
-     * Une réservation appartient à un trajet.
-     */
-    public function trajet()
+    protected function casts(): array
     {
-        return $this->belongsTo(Trajet::class, 'id_trajet', 'id_trajet');
+        return [
+            'statut' => StatutReservation::class,
+            'date_reservation' => 'datetime',
+            'compatibilite_ia' => CompatibiliteIACast::class,
+        ];
+    }
+
+    public function trajet(): BelongsTo
+    {
+        return $this->belongsTo(Trajet::class);
+    }
+
+    public function passager(): BelongsTo
+    {
+        return $this->belongsTo(Employe::class, 'passager_id');
     }
 
     /**
-     * Une réservation appartient à un employé.
+     * Applique une transition de statut en verifiant qu'elle est autorisee
+     * par la matrice de StatutReservation. Leve une exception sinon.
+     *
+     * Tache: Soukaina (Epic 3 - Controler les transitions de statut)
      */
-    public function employe()
+    public function changerStatut(StatutReservation $nouveauStatut): void
     {
-        return $this->belongsTo(Employe::class, 'id_employe', 'id_employe');
-    }
+        if (! $this->statut->peutTransitionnerVers($nouveauStatut)) {
+            throw new \DomainException(sprintf(
+                'Transition interdite : %s -> %s',
+                $this->statut->value,
+                $nouveauStatut->value
+            ));
+        }
 
-    /**
-     * Une réservation possède un seul résultat IA.
-     */
-    public function resultatIA()
-    {
-        return $this->hasOne(ResultatIA::class, 'id_reservation', 'id_reservation');
+        if ($nouveauStatut === StatutReservation::Confirmee && ! $this->trajet->aDesPlacesDisponibles()) {
+            throw new \DomainException('Impossible de confirmer : plus de places disponibles sur ce trajet.');
+        }
+
+        $this->update(['statut' => $nouveauStatut]);
     }
 }

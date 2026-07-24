@@ -1,58 +1,65 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CoRide — Code source (MobiliTech)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Structure d'app Laravel 12 (fichiers `app/`, `database/`, `routes/`,
+`resources/views/`). A copier dans un projet `laravel new coride` existant
+(`composer require laravel/breeze laravel/ai` puis coller ces fichiers).
 
-## About Laravel
+## Repartition des fichiers par developpeur
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 👨‍💻 Taha — Entites, modeles, IA (moteur), seeders
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Fichier | Epic / Tache |
+|---|---|
+| `app/Enums/RoleEmploye.php` | Epic 2 — Identifier les entites |
+| `app/Models/Entreprise.php` | Epic 3 — Modele Entreprise |
+| `app/Models/Employe.php` | Epic 3 — Modele Employe + relations |
+| `app/Models/Trajet.php` | Epic 3 — Modele Trajet + relations |
+| `app/Models/Reservation.php` (partie relations) | Epic 3 — Modele Reservation |
+| `app/Casts/CompatibiliteIACast.php` | Epic 5 — US8, Cast personnalise |
+| `app/ValueObjects/CompatibiliteIA.php` | Epic 5 — support du Cast |
+| `app/Ai/Agents/CompatibiliteAgent.php` | Epic 5 — Installer Laravel AI |
+| `app/Services/CompatibiliteIAService.php` | Epic 5 — Service de compatibilite IA |
+| `app/Http/Controllers/ReservationController.php` | Epic 3 — Contrôleur Reservation, verif places, anti-doublon |
+| `app/Http/Controllers/TrajetController.php` (index/show) | Epic 4 — Liste des trajets / détail |
+| `database/migrations/*` (structure) | Epic 2 — Configurer la base de données |
+| `database/factories/*.php` | Epic 2 — Factories |
+| `database/seeders/*.php` | Epic 2 — Seeders + import CSV |
+| `routes/web.php` (squelette) | Epic 1 — Créer le Sprint / routes |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👩‍💻 Soukaina — Règles métier, sécurité, vues, IA (structured output)
 
-## Learning Laravel
+| Fichier | Epic / Tache |
+|---|---|
+| `app/Enums/StatutReservation.php` | Epic 3 — Contrôler les transitions de statut |
+| `app/Models/Reservation.php::changerStatut()` | Epic 3 — Gérer les statuts des réservations |
+| `app/Models/Trajet.php::peutEtreSupprime()` | Epic 3 — Bloquer suppression trajet confirmé |
+| `app/Http/Requests/*.php` | Epic 3 — Form Requests + validations |
+| `app/Policies/TrajetPolicy.php`, `ReservationPolicy.php` | Epic 4 — Vérifier la sécurité |
+| `app/Providers/AppServiceProvider.php` | Epic 4 — Enregistrement des policies |
+| `app/Http/Controllers/TrajetController.php` (store/update/destroy) | Epic 3 — CRUD trajets |
+| `app/Http/Controllers/DashboardController.php` | Epic 4 — Tableau de bord conducteur |
+| `app/Ai/Agents/CompatibiliteAgent.php::schema()` | Epic 5 — Structured Output |
+| `resources/views/**/*.blade.php` | Epic 4 — Vues Blade (liste, détail, réservations, dashboard) |
+| Tests sur `database/seeders/data/*.csv` | Epic 5 — Tester les réponses IA / tests finaux |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Regles de gestion couvertes dans le code
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Un employe = un email pro unique, une seule entreprise (`employes.email` unique, `entreprise_id` NOT NULL).
+- Conducteur/passager/les deux → `RoleEmploye` + `Employe::estConducteur()/estPassager()`.
+- Places vs reservations confirmees → `Trajet::placesRestantes()`, verifie dans `Reservation::changerStatut()`.
+- Anti-doublon reservation → contrainte unique `(trajet_id, passager_id)` + `StoreReservationRequest`.
+- Transitions de statut controlees → `StatutReservation::transitionsAutorisees()` + `Reservation::changerStatut()`.
+- Suppression bloquee si reservations confirmees → `Trajet::peutEtreSupprime()` + `TrajetPolicy::delete()`.
+- Score IA uniquement cote passager, jamais cote conducteur → verifie dans `TrajetController::show()`
+  (`$user->estPassager() && ! $estConducteurDuTrajet`) avant tout appel au service IA.
+- Integrite referentielle → `cascadeOnDelete()` sur toutes les cles etrangeres.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Mise en route (une fois copie dans un projet Laravel)
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan serve
 ```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
