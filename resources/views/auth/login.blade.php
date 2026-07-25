@@ -39,6 +39,8 @@
                 </a>
             @endif
 
+            <a href="{{ route('register') }}" class="btn-link ms-3">Créer un compte</a>
+
             <x-primary-button class="ms-3">
                 {{ __('Log in') }}
             </x-primary-button>
