@@ -2,7 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Employe;
+use App\Models\Entreprise;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
@@ -31,5 +34,24 @@ class DatabaseSeeder extends Seeder
             TrajetSeeder::class,
             ReservationSeeder::class,
         ]);
+
+        $adminEntreprise = Entreprise::firstOrCreate(
+            ['nom' => 'Mobilitech'],
+            ['created_at' => now(), 'updated_at' => now()]
+        );
+
+        Employe::updateOrCreate(
+            ['email' => 'admin@techrecrut.test'],
+            [
+                'nom' => 'Admin CoRide',
+                'password' => Hash::make('password'),
+                'entreprise_id' => $adminEntreprise->id,
+                'ville_residence' => 'Casablanca',
+                'role' => 'les_deux',
+                'remember_token' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
     }
 }

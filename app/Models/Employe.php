@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Un employe appartient a une seule entreprise et possede un email professionnel unique.
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class Employe extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'employes';
 
@@ -72,5 +73,10 @@ class Employe extends Authenticatable
     public function estPassager(): bool
     {
         return $this->role->peutReserver();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->email === env('CORIDE_ADMIN_EMAIL', 'admin@techrecrut.test');
     }
 }
